@@ -18,6 +18,7 @@ from pandas import read_csv
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.externals import joblib
+from sklearn.utils import shuffle
 
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from pprint import pprint
@@ -60,15 +61,12 @@ def create_dataset(train_file, test_file):
 	dataframe = read_csv(train_file, engine='python')
 	# print len(dataframe)
 	train = dataframe.values
+	train = shuffle(train)
 
 	dataframe = read_csv(test_file, engine='python')
 	# print len(dataframe)
 	test = dataframe.values
 
-
-	# train_size = int(len(dataset) * 0.8)
-	# test_size = len(dataset) - train_size
-	# train, test = dataset[0:train_size, :], dataset[train_size:len(dataset), :]
 	print len(train), len(test)
 
 	train_X, train_Y, test_X, test_Y = split_dataset(train, test)
@@ -145,7 +143,7 @@ def graph_3d(train, train_y, test, test_y):
 	ax = fig.gca(projection='3d')
 
 	s = 20
-	# b1 = ax.scatter(train[:, 0], train[:, 1], train[:, 2], c=train_y, cmap='summer')
+	b1 = ax.scatter(train[:, 0], train[:, 1], train[:, 2], c=train_y, cmap='autumn')
 	b2 = ax.scatter(test[:, 0], test[:, 1], test[:, 2], c=test_y, cmap='spring')
 
 	plt.show()
@@ -161,12 +159,12 @@ Procedure:
 '''
 if __name__ == '__main__':
 
-	train = 'data/original_30.csv'
-	test = 'data/all_003.csv'
+	train = 'data/mixed_smalllarge_002.csv'
+	test = 'data/original_30.csv'
 
 	train_X, train_Y, test_X, test_Y = create_dataset(train, test)
 
-	seen_class = [0.0]
+	seen_class = [0]
 
 	# seen class can be set here! default seen class is all class
 	#  in train data
@@ -182,7 +180,7 @@ if __name__ == '__main__':
 	# Otherwise, you need to modify the function 'train_Dminus'
 	# 	and 'train_Dplus' in the file gen_data.py
 	'''
-	classifier_model = SVC(kernel='rbf', gamma=2, C=1.0, probability = True)
+	classifier_model = SVC(kernel='poly', degree=6, gamma=1.5, C=1.0, probability = True)
 	# classifier_model = SVC(kernel='rbf', probability = True)
 	# classifier_model = OneClassSVM(nu=0.005, kernel="rbf", gamma=25)
 
@@ -202,9 +200,16 @@ if __name__ == '__main__':
 	# set unseen label to -1
 	test_label = dealTesty(test_Y, seen_class)
 	# print test_label[p]
-	pprint(test_label[100:400])
-	# get_macroF1(test_preds, test_label)
+	get_macroF1(test_preds, test_label)
+
+	pprint(train_preds[:len(train_preds)])
+	n_error_train = train_preds[train_preds == -1].size
+	n_error_test = test_preds[test_preds == -1].size
+	print n_error_train, n_error_test
+
+	print 'train - ', 100*float(n_error_train)/train_X.shape[0]
+	print 'test - ', 100*float(n_error_test)/test_X.shape[0]
 
 	train_X, test_X = reduce_graph(train_X, test_X)
-	# graph(train_X, train_preds, test_X, test_preds)
-	graph_3d(train_X, train_preds, test_X, test_preds)
+	graph(train_X, train_preds, test_X, test_preds)
+	# graph_3d(train_X, train_preds, test_X, test_preds)
