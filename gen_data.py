@@ -255,7 +255,7 @@ class GenData:
 		return temp_prob_n.mean() - temp_prob_p.mean() + C * punish + C2 * punish2
 
 	'''
-		Function of generate positive data process
+		Function of generate negative data process
 	'''
 	def generate_negative_data(self, dim_range):
 		self.__negative_dataset = []

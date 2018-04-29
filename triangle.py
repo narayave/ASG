@@ -8,13 +8,17 @@ Date:
 '''
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 from sklearn.svm import SVC
 from asg import ASG
 from class_filter import ClassFilter
 from components import *
 from pandas import read_csv
-
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.externals import joblib
+
 
 def split_dataset(train, test):
 	train_dataX, train_dataY = [], []
@@ -34,7 +38,7 @@ def split_dataset(train, test):
 	trainX_norm = scale.fit_transform(train_dataX)
 	testX_norm = scale.transform(test_dataX)
 
-	# joblib.dump(scale, 'scale.pkl')
+	joblib.dump(scale, 'scale.pkl')
 
 	# trainX = np.unique(np.array(trainX_norm), axis=0)
 	trainX = np.array(trainX_norm)
@@ -85,7 +89,7 @@ def reduce_graph(train_X, test_X):
 
 	train = pca.transform(train_X)
 	test = pca.transform(test_X)
-	# joblib.dump(pca, 'pca.pkl')
+	joblib.dump(pca, 'pca.pkl')
 
 	print pca
 	print pca.explained_variance_ratio_
@@ -95,24 +99,61 @@ def reduce_graph(train_X, test_X):
 	return train, test
 
 
+def graph(train, train_y, test, test_y):
+
+
+	# space_sampling_points = 100
+	# # Generate a regular grid to sample the 3D space for various operations later
+	# xx, yy = np.meshgrid(np.linspace(-3, 3, space_sampling_points),
+	# 					np.linspace(-3, 3, space_sampling_points))
+
+
+	# # plot the line, the points, and the nearest vectors to the plane
+	# Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+	# Z = Z.reshape(xx.shape)
+
+	fig = plt.figure()
+	# ax = fig.add_subplot(111, projection='3d')
+
+	# print 'About to graph'
+
+	# plt.title("Novelty Detection")
+	# plt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), 1, 7), cmap=plt.cm.PuBu)
+	# a = plt.contour(xx, yy, Z, levels=[0], linewidths=2, colors='darkred')
+	# plt.contourf(xx, yy, Z, levels=[0, Z.max()], colors='palevioletred')
+
+	s = 20
+	plt.scatter(train[:, 0], train[:, 1], c=train_y, cmap='autumn', s=s)
+	plt.scatter(test[:, 0], test[:, 1], c=test_y, cmap='spring', s=s)
+
+	# plt.xlim((-1.0, 1.0))
+	# plt.ylim((-0.5, 1.5))
+
+	# plt.savefig("pca_svm.svg", dpi=3600, format='svg')
+	plt.show()
+
+
+
 
 '''
 Procedure:
 		Input the origin data, and filter data by category.
 		Generate positive and negative data of each class.
 		Use ASG method to get the margin of each class.
-		Input test data, use the model given by Asg to decide which class the test data should be.
+		Input test data, use the model given by Asg to decide
+			which class the test data should be.
 '''
 if __name__ == '__main__':
 
-	train = 'good.csv'
-	test = 'good.csv'
+	train = 'data/original_30.csv'
+	test = 'data/all_003.csv'
 
 	train_X, train_Y, test_X, test_Y = create_dataset(train, test)
 
-	seen_class = [0]
+	seen_class = [0.0]
 
-	# seen class can be set here! default seen class is all class in train data
+	# seen class can be set here! default seen class is all class
+	#  in train data
 	cf = ClassFilter(train_X, train_Y, SeenClass = seen_class)
 	data_by_label = cf.Filter()
 	print "Total label:", cf.getDistinctLabel()
@@ -120,8 +161,10 @@ if __name__ == '__main__':
 
 	'''
 	# classifier model in ASG can be set here.
-	# Note that classifier needs to support the parameter 'sample_weight' in the 'fit' function.
-	# Otherwise, you need to modify the function 'train_Dminus' and 'train_Dplus' in the file gen_data.py
+	# Note that classifier needs to support the parameter
+	# 	'sample_weight' in the 'fit' function.
+	# Otherwise, you need to modify the function 'train_Dminus'
+	# 	and 'train_Dplus' in the file gen_data.py
 	'''
 	classifier_model = SVC(kernel='rbf', probability = True)
 
@@ -131,19 +174,18 @@ if __name__ == '__main__':
 	# run_ASG:
 	# generate_size: the size of the sample you want to generate
 	# sample_size: sample size in origin data when generating data
-	asg.run_ASG(generate_size = 50, sample_size = 100)
+	asg.run_ASG(generate_size = 100, sample_size = 150)
 
-	# predict for the test data with unseen class. If the test data belongs to unseen class, then output -1
+	# predict for the test data with unseen class. If the test data
+	#  belongs to unseen class, then output -1
 	print("[ASG] performance on test data")
 	train_preds = asg.predict(train_X)
 	test_preds = asg.predict(test_X)
-
 	# set unseen label to -1
 	test_label = dealTesty(test_Y, seen_class)
 	print test_label
 	get_macroF1(test_preds, test_label)
 
-
 	train, test = reduce_graph(train_X, test_X)
 
-	graph(train, train_y, )
+	graph(train, train_preds, test, test_preds)
