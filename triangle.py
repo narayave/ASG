@@ -10,7 +10,7 @@ Date:
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.svm import SVC
+from sklearn.svm import SVC, OneClassSVM
 from asg import ASG
 from class_filter import ClassFilter
 from components import *
@@ -18,6 +18,9 @@ from pandas import read_csv
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.externals import joblib
+
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from pprint import pprint
 
 
 def split_dataset(train, test):
@@ -84,7 +87,7 @@ def reduce_graph(train_X, test_X):
 	print 'train X', train_X.shape
 	print 'test X', test_X.shape
 
-	pca = PCA(n_components=2)
+	pca = PCA(n_components=3)
 	pca.fit(train_X)
 
 	train = pca.transform(train_X)
@@ -123,8 +126,12 @@ def graph(train, train_y, test, test_y):
 	# plt.contourf(xx, yy, Z, levels=[0, Z.max()], colors='palevioletred')
 
 	s = 20
-	plt.scatter(train[:, 0], train[:, 1], c=train_y, cmap='autumn', s=s)
-	plt.scatter(test[:, 0], test[:, 1], c=test_y, cmap='spring', s=s)
+	# plt.scatter(train[:, 0], train[:, 1], c=train_y, cmap='autumn', s=s)
+	# plt.scatter(test[:, 0], test[:, 1], c=test_y, cmap='spring', s=s)
+
+	plt.scatter(train[:, 0], train[:, 1], train[:, 2], c=train_y, cmap='autumn') #, s=s)
+	plt.scatter(test[:, 0], test[:, 1], test[:, 2], c=test_y, cmap='spring') #, s=s)
+
 
 	# plt.xlim((-1.0, 1.0))
 	# plt.ylim((-0.5, 1.5))
@@ -132,7 +139,16 @@ def graph(train, train_y, test, test_y):
 	# plt.savefig("pca_svm.svg", dpi=3600, format='svg')
 	plt.show()
 
+def graph_3d(train, train_y, test, test_y):
 
+	fig = plt.figure()
+	ax = fig.gca(projection='3d')
+
+	s = 20
+	# b1 = ax.scatter(train[:, 0], train[:, 1], train[:, 2], c=train_y, cmap='summer')
+	b2 = ax.scatter(test[:, 0], test[:, 1], test[:, 2], c=test_y, cmap='spring')
+
+	plt.show()
 
 
 '''
@@ -166,7 +182,9 @@ if __name__ == '__main__':
 	# Otherwise, you need to modify the function 'train_Dminus'
 	# 	and 'train_Dplus' in the file gen_data.py
 	'''
-	classifier_model = SVC(kernel='rbf', probability = True)
+	classifier_model = SVC(kernel='rbf', gamma=2, C=1.0, probability = True)
+	# classifier_model = SVC(kernel='rbf', probability = True)
+	# classifier_model = OneClassSVM(nu=0.005, kernel="rbf", gamma=25)
 
 	# ASG method: initial
 	asg = ASG(classifier=classifier_model, classfilter = cf)
@@ -174,7 +192,7 @@ if __name__ == '__main__':
 	# run_ASG:
 	# generate_size: the size of the sample you want to generate
 	# sample_size: sample size in origin data when generating data
-	asg.run_ASG(generate_size = 100, sample_size = 150)
+	asg.run_ASG(generate_size = 100, sample_size = 100)
 
 	# predict for the test data with unseen class. If the test data
 	#  belongs to unseen class, then output -1
@@ -183,9 +201,10 @@ if __name__ == '__main__':
 	test_preds = asg.predict(test_X)
 	# set unseen label to -1
 	test_label = dealTesty(test_Y, seen_class)
-	print test_label
-	get_macroF1(test_preds, test_label)
+	# print test_label[p]
+	pprint(test_label[100:400])
+	# get_macroF1(test_preds, test_label)
 
-	train, test = reduce_graph(train_X, test_X)
-
-	graph(train, train_preds, test, test_preds)
+	train_X, test_X = reduce_graph(train_X, test_X)
+	# graph(train_X, train_preds, test_X, test_preds)
+	graph_3d(train_X, train_preds, test_X, test_preds)
