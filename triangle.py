@@ -24,10 +24,13 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from pprint import pprint
 
 
-def split_dataset(train, test):
+def split_dataset(train, test, orig):
 	train_dataX, train_dataY = [], []
 	test_dataX, test_dataY = [], []
+	orig_x = []
 
+	for i in range(0, len(orig)):
+		orig_x.append(orig[i, :6])
 
 	for i in range(0, len(train)):
 		# print data[i, :10]
@@ -39,7 +42,8 @@ def split_dataset(train, test):
 		test_dataY.append(test[i, 6:][0])
 
 	scale = MinMaxScaler(feature_range=(0, 1))
-	trainX_norm = scale.fit_transform(train_dataX)
+	orig_norm = scale.fit_transform(orig_x)
+	trainX_norm = scale.transform(train_dataX)
 	testX_norm = scale.transform(test_dataX)
 
 	joblib.dump(scale, 'scale.pkl')
@@ -54,8 +58,12 @@ def split_dataset(train, test):
 	return trainX_norm, train_dataY, testX_norm, test_dataY
 
 
-def create_dataset(train_file, test_file):
+def create_dataset(train_file, test_file, orig):
 	dataset = []
+
+	dataframe = read_csv(orig, engine='python')
+	# print len(dataframe)
+	orig = dataframe.values
 
 	# TODO: Changing input here
 	dataframe = read_csv(train_file, engine='python')
@@ -69,7 +77,7 @@ def create_dataset(train_file, test_file):
 
 	print len(train), len(test)
 
-	train_X, train_Y, test_X, test_Y = split_dataset(train, test)
+	train_X, train_Y, test_X, test_Y = split_dataset(train, test, orig)
 
 	print 'Training data details: ', str(len(train_X)), str(len(train_Y))
 	print 'Test data details:', str(len(test_X)), str(len(test_Y))
@@ -85,7 +93,7 @@ def reduce_graph(train_X, test_X):
 	print 'train X', train_X.shape
 	print 'test X', test_X.shape
 
-	pca = PCA(n_components=3)
+	pca = PCA(n_components=2)
 	pca.fit(train_X)
 
 	train = pca.transform(train_X)
@@ -124,15 +132,10 @@ def graph(train, train_y, test, test_y):
 	# plt.contourf(xx, yy, Z, levels=[0, Z.max()], colors='palevioletred')
 
 	s = 20
-	# plt.scatter(train[:, 0], train[:, 1], c=train_y, cmap='autumn', s=s)
-	# plt.scatter(test[:, 0], test[:, 1], c=test_y, cmap='spring', s=s)
 
-	plt.scatter(train[:, 0], train[:, 1], train[:, 2], c=train_y, cmap='autumn') #, s=s)
-	plt.scatter(test[:, 0], test[:, 1], test[:, 2], c=test_y, cmap='spring') #, s=s)
+	plt.scatter(train[:, 0], train[:, 1], c=train_y, cmap='autumn') #, s=s)
+	plt.scatter(test[:, 0], test[:, 1], c=test_y, cmap='spring') #, s=s)
 
-
-	# plt.xlim((-1.0, 1.0))
-	# plt.ylim((-0.5, 1.5))
 
 	# plt.savefig("pca_svm.svg", dpi=3600, format='svg')
 	plt.show()
@@ -160,9 +163,11 @@ Procedure:
 if __name__ == '__main__':
 
 	train = 'data/mixed_smalllarge_002.csv'
-	test = 'data/original_30.csv'
+	test = 'data/all_003.csv'
 
-	train_X, train_Y, test_X, test_Y = create_dataset(train, test)
+	orig = 'data/original_30.csv'
+
+	train_X, train_Y, test_X, test_Y = create_dataset(train, test, orig)
 
 	seen_class = [0]
 
@@ -180,9 +185,8 @@ if __name__ == '__main__':
 	# Otherwise, you need to modify the function 'train_Dminus'
 	# 	and 'train_Dplus' in the file gen_data.py
 	'''
-	classifier_model = SVC(kernel='poly', degree=6, gamma=1.5, C=1.0, probability = True)
+	classifier_model = SVC(kernel='rbf', gamma=5, probability = True)
 	# classifier_model = SVC(kernel='rbf', probability = True)
-	# classifier_model = OneClassSVM(nu=0.005, kernel="rbf", gamma=25)
 
 	# ASG method: initial
 	asg = ASG(classifier=classifier_model, classfilter = cf)
@@ -190,7 +194,7 @@ if __name__ == '__main__':
 	# run_ASG:
 	# generate_size: the size of the sample you want to generate
 	# sample_size: sample size in origin data when generating data
-	asg.run_ASG(generate_size = 100, sample_size = 100)
+	asg.run_ASG(generate_size = 50, sample_size = 50)
 
 	# predict for the test data with unseen class. If the test data
 	#  belongs to unseen class, then output -1

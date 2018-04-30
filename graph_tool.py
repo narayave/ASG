@@ -75,7 +75,7 @@ def graph(data):
 	fig = plt.figure()
 
 	s = 20
-	plt.scatter(data[:, 0], data[:, 1], data[:, 2], s=s) #c=train_y, cmap='autumn', s=s)
+	plt.scatter(data[:, 0], data[:, 1], s=s) #c=train_y, cmap='autumn', s=s)
 
 	# plt.savefig("pca_svm.svg", dpi=3600, format='svg')
 	plt.show()
@@ -104,5 +104,5 @@ if __name__ == '__main__':
 	concatenate(in_files, out_file)
 	dataset = to_dataframe(out_file)
 	transformed_data = transform(dataset)
-	# graph(transformed_data)
-	graph_3d(transformed_data)
+	graph(transformed_data)
+	# graph_3d(transformed_data)
