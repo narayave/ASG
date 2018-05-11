@@ -88,12 +88,12 @@ def create_dataset(train_file, test_file, orig):
 '''
 	PCA to reduce dimensionality and be able to graph
 '''
-def reduce_graph(train_X, test_X):
+def reduce_graph(train_X, test_X, comps):
 
 	print 'train X', train_X.shape
 	print 'test X', test_X.shape
 
-	pca = PCA(n_components=2)
+	pca = PCA(n_components=comps)
 	pca.fit(train_X)
 
 	train = pca.transform(train_X)
@@ -162,8 +162,11 @@ Procedure:
 '''
 if __name__ == '__main__':
 
-	train = 'data/mixed_smalllarge_002.csv'
-	test = 'data/all_003.csv'
+	train = 'data/original_30.csv'
+	test = 'data/rbfsvm_train_30.csv'
+
+	# train = 'data/mixed_smalllarge_002.csv'
+	# test = 'data/all_003.csv'
 
 	orig = 'data/original_30.csv'
 
@@ -185,7 +188,7 @@ if __name__ == '__main__':
 	# Otherwise, you need to modify the function 'train_Dminus'
 	# 	and 'train_Dplus' in the file gen_data.py
 	'''
-	classifier_model = SVC(kernel='rbf', gamma=5, probability = True)
+	classifier_model = SVC(kernel='rbf', gamma=260, C=200, probability = True)
 	# classifier_model = SVC(kernel='rbf', probability = True)
 
 	# ASG method: initial
@@ -214,6 +217,11 @@ if __name__ == '__main__':
 	print 'train - ', 100*float(n_error_train)/train_X.shape[0]
 	print 'test - ', 100*float(n_error_test)/test_X.shape[0]
 
-	train_X, test_X = reduce_graph(train_X, test_X)
+
+	# TODO TODO TODO: Are these values normalized?!
+
+
+	train_X, test_X = reduce_graph(train_X, test_X, 2)
+
 	graph(train_X, train_preds, test_X, test_preds)
 	# graph_3d(train_X, train_preds, test_X, test_preds)

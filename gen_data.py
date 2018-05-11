@@ -83,6 +83,7 @@ class GenData:
 			res.append(dis)
 		res = np.array(res)
 		return res.min()
+		# return 0.0001
 
 	'''
 		Objective function of generating positive data
@@ -177,6 +178,7 @@ class GenData:
 			objective = Objective(self.train_Dplus, dim)
 			solution = Opt.min(objective, parameter)
 			x_plus = solution.get_x()
+			print x_plus
 			self.__positive_dataset.append(x_plus)
 			print "[ASG] class",self.__class_num, ": generating positive data, data size:",len(self.__positive_dataset)
 			print "**************************************************"
@@ -248,7 +250,7 @@ class GenData:
 		else:
 			punish2 = deta_temp - dis2
 
-		C = 0.01;C2 = 0.01
+		C = 5; C2 = 5
 
 		temp_prob_p = pred_proba_p[:,1]
 		temp_prob_n = pred_proba_n[:,1]
@@ -266,7 +268,7 @@ class GenData:
 
 		budget = self.__Budget  # number of calls to the objective function
 		# by setting autoset=false, the algorithm parameters will not be set by default
-		parameter = Parameter(algorithm="racos", budget=budget, autoset=True)
+		parameter = Parameter(algorithm="sracos", budget=budget, autoset=True)
 		# so you are allowed to setup algorithm parameters of racos
 		# parameter.set_train_size(6)
 		# parameter.set_probability(0.95)
@@ -282,9 +284,12 @@ class GenData:
 			parameter.set_init_samples(init_data)
 
 			objective = Objective(self.train_Dminus, dim)
+			print 'I have objective'
 			solution = Opt.min(objective, parameter)
+			print 'Trying for solution'
 			x_minus = solution.get_x()
 			self.__negative_dataset.append(x_minus)
+			print x_minus
 			print "[ASG] class",self.__class_num,": Generating negative data, data size:",len(self.__negative_dataset)
 			print "**************************************************"
 			isExists = os.path.exists(self.__gendir)

@@ -54,9 +54,9 @@ class ASG:
 			original_data = classfilter.getDatabyLabel()[NUM]
 			gen_data = GenData(original_data[:sample_size,],class_num = NUM, generate_size = generate_size,classifier = self.__classifier, budget = budget)
 			#print "Generate positive data of class ", NUM
-			gen_data.generate_negative_data(dim_range = [0,1])
+			gen_data.generate_negative_data(dim_range = [0,0.0001])
 			#print "Generate negative data of class ", NUM
-			gen_data.generate_positive_data(dim_range = [0,1])
+			gen_data.generate_positive_data(dim_range = [0,0.0001])
 			gen_data_list.append(gen_data)
 		self.__gen_data_list = gen_data_list
 		self.__plus_label = []

@@ -22,7 +22,7 @@ from sklearn.externals import joblib
 
 
 SCALER = MinMaxScaler(feature_range=(0, 1))
-PCA_REDUCE = PCA(n_components=2)
+PCA_REDUCE = None #PCA(n_components=2)
 
 def concatenate(in_files, out_file):
 
@@ -71,24 +71,25 @@ def transform(data):
 	return all_data
 
 
-def graph(data):
+def graph(minus, plus):
 	fig = plt.figure()
 
 	s = 20
-	plt.scatter(data[:, 0], data[:, 1], s=s) #c=train_y, cmap='autumn', s=s)
+	plt.scatter(minus[:, 0], minus[:, 1], s=s, c='b')
+	plt.scatter(plus[:, 0], plus[:, 1], s=s, c='y')
 
-	# plt.savefig("pca_svm.svg", dpi=3600, format='svg')
+	# plt.savefig("graph_tool.svg", dpi=3600, format='svg')
 	plt.show()
 
 
-def graph_3d(train):
+def graph_3d(minus, plus):
 
 	fig = plt.figure()
 	ax = fig.gca(projection='3d')
 
 	s = 20
-	b1 = ax.scatter(train[:, 0], train[:, 1], train[:, 2]) #, c=train_y, cmap='summer')
-	# b2 = ax.scatter(test[:, 0], test[:, 1], test[:, 2], c=test_y, cmap='spring')
+	b1 = ax.scatter(minus[:, 0], minus[:, 1], minus[:, 2], s=s, c='b')
+	b2 = ax.scatter(plus[:, 0], plus[:, 1], plus[:, 2], s=s, c='y')
 
 	plt.show()
 
@@ -96,13 +97,11 @@ def graph_3d(train):
 
 if __name__ == '__main__':
 
-	in_files = ['gendata/D_plus0.0_1', 'gendata/D_minus0.0_1']
-	out_file = 'gendata/all_data'
+	in_files = ['gendata/D_minus0_1', 'gendata/D_plus0_1']
+	# out_file = 'gendata/all_data'
 
 	load_modules()
-
-	concatenate(in_files, out_file)
-	dataset = to_dataframe(out_file)
-	transformed_data = transform(dataset)
-	graph(transformed_data)
-	# graph_3d(transformed_data)
+	minus = transform(to_dataframe(in_files[0]))
+	plus = transform(to_dataframe(in_files[1]))
+	graph(minus, plus)
+	# graph_3d(minus, plus)
